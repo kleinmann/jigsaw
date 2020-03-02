@@ -34,7 +34,7 @@ class PresetPackage
         $this->files = new Filesystem();
     }
 
-    public function init($preset, PresetScaffoldBuilder $builder)
+    public function init($preset, PresetScaffoldBuilder $builder): void
     {
         $this->preset = $preset;
         $this->builder = $builder;
@@ -62,12 +62,12 @@ class PresetPackage
         }
     }
 
-    protected function runDefaultInstaller($settings = [])
+    protected function runDefaultInstaller($settings = []): void
     {
         $this->defaultInstaller->install($this->builder, $settings);
     }
 
-    protected function resolveNames()
+    protected function resolveNames(): void
     {
         $name = Arr::get(self::PRESETS, $this->preset, $this->preset);
 
@@ -82,14 +82,14 @@ class PresetPackage
         $this->shortName = $this->getShortName();
     }
 
-    protected function getShortName()
+    protected function getShortName(): string
     {
         return Str::contains($this->preset, '/') ?
             explode('/', $this->preset)[1] :
             $this->preset;
     }
 
-    protected function resolvePath()
+    protected function resolvePath(): void
     {
         $this->path = collect([$this->builder->base, 'vendor', $this->vendor, $this->name, $this->suffix])
             ->filter()
@@ -106,7 +106,7 @@ class PresetPackage
         }
     }
 
-    protected function installPackageFromComposer($package)
+    protected function installPackageFromComposer($package): void
     {
         $this->process->run('composer require ' . $package);
     }

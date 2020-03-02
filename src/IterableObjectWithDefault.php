@@ -4,8 +4,8 @@ namespace TightenCo\Jigsaw;
 
 class IterableObjectWithDefault extends IterableObject
 {
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->first() ?: '';
+        return (string) $this->first() ?: '';
     }
 }

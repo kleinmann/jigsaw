@@ -7,9 +7,15 @@ use TightenCo\Jigsaw\File\Filesystem;
 
 class PresetScaffoldBuilder extends ScaffoldBuilder
 {
+    /** @var PresetPackage */
     public $package;
+
+    /** @var Filesystem */
     protected $files;
+
+    /** @var ProcessRunner */
     protected $process;
+
     protected $question;
 
     public function __construct(Filesystem $files, PresetPackage $package, ProcessRunner $process)
@@ -20,7 +26,7 @@ class PresetScaffoldBuilder extends ScaffoldBuilder
         $this->process = $process;
     }
 
-    public function init($preset)
+    public function init($preset): self
     {
         $this->package->init($preset, $this);
         $this->addPackageToCachedComposerRequires();
@@ -28,14 +34,14 @@ class PresetScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    public function build()
+    public function build(): self
     {
         $this->package->runInstaller($this->console);
 
         return $this;
     }
 
-    public function buildBasicScaffold()
+    public function buildBasicScaffold(): self
     {
         (new BasicScaffoldBuilder($this->files))
             ->setBase($this->base)
@@ -44,7 +50,7 @@ class PresetScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    public function mergeComposerDotJson()
+    public function mergeComposerDotJson(): self
     {
         $newComposer = collect($this->getComposer())
             ->forget(['name', 'type', 'version', 'description', 'keywords', 'license', 'authors'])
@@ -56,7 +62,7 @@ class PresetScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    public function deleteSiteFiles($match = [])
+    public function deleteSiteFiles($match = []): self
     {
         if (collect($match)->count()) {
             collect($this->getSiteFilesAndDirectories($match))
@@ -74,7 +80,7 @@ class PresetScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    public function copyPresetFiles($match = [], $ignore = [], $directory = null)
+    public function copyPresetFiles($match = [], $ignore = [], $directory = null): self
     {
         $source = $this->package->path .
             ($directory ? DIRECTORY_SEPARATOR . trim($directory, '/') : '');
@@ -98,19 +104,19 @@ class PresetScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    public function runCommands($commands = [])
+    public function runCommands($commands = []): self
     {
         $this->process->run($commands);
 
         return $this;
     }
 
-    protected function addPackageToCachedComposerRequires()
+    protected function addPackageToCachedComposerRequires(): void
     {
         $this->composerDependencies[] = $this->package->vendor . DIRECTORY_SEPARATOR . $this->package->name;
     }
 
-    protected function createDirectoryForFile($file)
+    protected function createDirectoryForFile($file): void
     {
         $path = $file->getRelativePath();
 

@@ -2,9 +2,9 @@
 
 namespace TightenCo\Jigsaw\PathResolvers;
 
-class PrettyOutputPathResolver
+class PrettyOutputPathResolver implements OutputPathResolverInterface
 {
-    public function link($path, $name, $type, $page = 1)
+    public function link(string $path, string $name, string $type, int $page = 1): string
     {
         if ($type === 'html' && $name === 'index') {
             if ($page > 1) {
@@ -25,7 +25,7 @@ class PrettyOutputPathResolver
         return sprintf('%s%s%s.%s', '/', leftTrimPath(trimPath($path) . '/'), $name, $type);
     }
 
-    public function path($path, $name, $type, $page = 1)
+    public function path(string $path, string $name, string $type, int $page = 1): string
     {
         if ($type === 'html' && $name === 'index' && $page > 1) {
             return leftTrimPath(trimPath($path) . '/' . $page . '/' . 'index.html');
@@ -46,7 +46,7 @@ class PrettyOutputPathResolver
         return sprintf('%s%s%s.%s', trimPath($path), '/', $name, $type);
     }
 
-    public function directory($path, $name, $type, $page = 1)
+    public function directory(string $path, string $name, string $type, int $page = 1): string
     {
         if ($type === 'html' && $name === 'index' && $page > 1) {
             return leftTrimPath(trimPath($path) . '/' . $page);

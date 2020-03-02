@@ -6,18 +6,19 @@ use Illuminate\Support\Arr;
 
 class ConfigFile
 {
+    /** @var array */
     public $config;
 
-    public function __construct($config_path, $helpers_path = '')
+    public function __construct($configPath, $helpersPath = '')
     {
-        $config = file_exists($config_path) ? include $config_path : [];
-        $helpers = file_exists($helpers_path) ? include $helpers_path : [];
+        $config = file_exists($configPath) ? include $configPath : [];
+        $helpers = file_exists($helpersPath) ? include $helpersPath : [];
 
         $this->config = array_merge($config, $helpers);
         $this->convertStringCollectionsToArray();
     }
 
-    protected function convertStringCollectionsToArray()
+    protected function convertStringCollectionsToArray(): void
     {
         $collections = Arr::get($this->config, 'collections');
 

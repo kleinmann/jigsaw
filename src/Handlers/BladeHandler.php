@@ -2,19 +2,28 @@
 
 namespace TightenCo\Jigsaw\Handlers;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use TightenCo\Jigsaw\File\InputFile;
 use TightenCo\Jigsaw\File\OutputFile;
 use TightenCo\Jigsaw\File\TemporaryFilesystem;
 use TightenCo\Jigsaw\PageData;
 use TightenCo\Jigsaw\Parsers\FrontMatterParser;
 use TightenCo\Jigsaw\View\ViewRenderer;
 
-class BladeHandler
+class BladeHandler implements HandlerInterface
 {
+    /** @var TemporaryFilesystem */
     private $temporaryFilesystem;
+
+    /** @var FrontMatterParser */
     private $parser;
+
+    /** @var ViewRenderer */
     private $view;
-    private $hasFrontMatter;
+
+    /** @var bool */
+    private $hasFrontMatter = false;
 
     public function __construct(TemporaryFilesystem $temporaryFilesystem, FrontMatterParser $parser, ViewRenderer $viewRenderer)
     {
@@ -23,7 +32,7 @@ class BladeHandler
         $this->view = $viewRenderer;
     }
 
-    public function shouldHandle($file)
+    public function shouldHandle(InputFile $file): bool
     {
         return Str::contains($file->getFilename(), '.blade.');
     }
@@ -35,7 +44,7 @@ class BladeHandler
         return $this->buildOutput($file, $pageData);
     }
 
-    public function handle($file, $pageData)
+    public function handle(InputFile $file, PageData $pageData): Collection
     {
         $pageData->page->addVariables($this->getPageVariables($file));
 

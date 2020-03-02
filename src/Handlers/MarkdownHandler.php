@@ -2,16 +2,23 @@
 
 namespace TightenCo\Jigsaw\Handlers;
 
+use Illuminate\Support\Collection;
+use TightenCo\Jigsaw\File\InputFile;
 use TightenCo\Jigsaw\File\OutputFile;
 use TightenCo\Jigsaw\File\TemporaryFilesystem;
 use TightenCo\Jigsaw\PageData;
 use TightenCo\Jigsaw\Parsers\FrontMatterParser;
 use TightenCo\Jigsaw\View\ViewRenderer;
 
-class MarkdownHandler
+class MarkdownHandler implements HandlerInterface
 {
+    /** @var TemporaryFilesystem */
     private $temporaryFilesystem;
+
+    /** @var FrontMatterParser */
     private $parser;
+
+    /** @var ViewRenderer */
     private $view;
 
     public function __construct(TemporaryFilesystem $temporaryFilesystem, FrontMatterParser $parser, ViewRenderer $viewRenderer)
@@ -21,29 +28,35 @@ class MarkdownHandler
         $this->view = $viewRenderer;
     }
 
-    public function shouldHandle($file)
+    public function shouldHandle(InputFile $file): bool
     {
         return in_array($file->getExtension(), ['markdown', 'md', 'mdown']);
     }
 
-    public function handleCollectionItem($file, PageData $pageData)
+    /**
+     * @return OutputFile[]
+     */
+    public function handleCollectionItem(InputFile $file, PageData $pageData): array
     {
         return $this->buildOutput($file, $pageData);
     }
 
-    public function handle($file, $pageData)
+    public function handle(InputFile $file, PageData $pageData): Collection
     {
         $pageData->page->addVariables($this->getPageVariables($file));
 
         return $this->buildOutput($file, $pageData);
     }
 
-    private function getPageVariables($file)
+    private function getPageVariables(InputFile $file): array
     {
         return array_merge(['section' => 'content'], $this->parseFrontMatter($file));
     }
 
-    private function buildOutput($file, PageData $pageData)
+    /**
+     * @return Collection|OutputFile[]
+     */
+    private function buildOutput(InputFile $file, PageData $pageData): Collection
     {
         return collect($pageData->page->extends)
             ->map(function ($extends, $templateToExtend) use ($file, $pageData) {
@@ -63,7 +76,7 @@ class MarkdownHandler
             });
     }
 
-    private function render($file, $pageData, $extends)
+    private function render(InputFile $file, PageData $pageData, string $extends): string
     {
         $uniqueFileName = $file->getPathname() . $extends;
 
@@ -76,7 +89,7 @@ class MarkdownHandler
         }
     }
 
-    private function renderMarkdownFile($file, $uniqueFileName, $pageData, $extends)
+    private function renderMarkdownFile(InputFile $file, string $uniqueFileName, PageData $pageData, string $extends): string
     {
         $html = $this->parser->parseMarkdownWithoutFrontMatter(
             $this->getEscapedMarkdownContent($file)
@@ -92,7 +105,7 @@ class MarkdownHandler
         );
     }
 
-    private function renderBladeMarkdownFile($file, $uniqueFileName, $pageData, $extends)
+    private function renderBladeMarkdownFile(InputFile $file, string $uniqueFileName, PageData $pageData, string $extends): string
     {
         $contentPath = $this->renderMarkdownContent($file);
 
@@ -107,7 +120,7 @@ class MarkdownHandler
         );
     }
 
-    private function renderMarkdownContent($file)
+    private function renderMarkdownContent(InputFile $file): string
     {
         return $this->temporaryFilesystem->put(
             $this->getEscapedMarkdownContent($file),
@@ -116,7 +129,7 @@ class MarkdownHandler
         );
     }
 
-    private function renderBladeWrapper($sourceFileName, $contentFileName, $pageData, $extends)
+    private function renderBladeWrapper(string $sourceFileName, string $contentFileName, PageData $pageData, string $extends): string
     {
         return $this->temporaryFilesystem->put(
             $this->makeBladeWrapper($contentFileName, $pageData, $extends),
@@ -125,7 +138,7 @@ class MarkdownHandler
         );
     }
 
-    private function makeBladeWrapper($path, $pageData, $extends)
+    private function makeBladeWrapper(string $path, PageData $pageData, string $extends): string
     {
         return collect([
             "@extends('{$extends}')",
@@ -135,7 +148,7 @@ class MarkdownHandler
         ])->implode("\n");
     }
 
-    private function getValidCachedFile($file, $uniqueFileName)
+    private function getValidCachedFile(InputFile $file, string $uniqueFileName): ?InputFile
     {
         $extension = $file->isBladeFile() ? '.blade.md' : '.php';
         $cached = $this->temporaryFilesystem->get($uniqueFileName, $extension);
@@ -143,9 +156,10 @@ class MarkdownHandler
         if ($cached && $cached->getLastModifiedTime() >= $file->getLastModifiedTime()) {
             return $cached;
         }
+        return null;
     }
 
-    private function getEscapedMarkdownContent($file)
+    private function getEscapedMarkdownContent(InputFile $file): string
     {
         $replacements = ['<?php' => "<{{'?php'}}"];
 
@@ -160,7 +174,7 @@ class MarkdownHandler
         return strtr($file->getContents(), $replacements);
     }
 
-    private function parseFrontMatter($file)
+    private function parseFrontMatter(InputFile $file): array
     {
         return $this->parser->getFrontMatter($file->getContents());
     }

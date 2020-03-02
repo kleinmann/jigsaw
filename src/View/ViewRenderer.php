@@ -4,11 +4,17 @@ namespace TightenCo\Jigsaw\View;
 
 use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\Factory;
+use TightenCo\Jigsaw\PageData;
 
 class ViewRenderer
 {
+    /** @var Factory */
     private $viewFactory;
+
+    /** @var BladeCompiler */
     private $bladeCompiler;
+
+    /** @var array */
     private $extensionEngines = [
         'md' => 'markdown',
         'markdown' => 'markdown',
@@ -17,6 +23,8 @@ class ViewRenderer
         'blade.mdown' => 'blade-markdown',
         'blade.markdown' => 'blade-markdown',
     ];
+
+    /** @var array */
     private $bladeExtensions = [
         'js', 'json', 'xml', 'rss', 'atom', 'txt', 'text', 'html',
     ];
@@ -31,34 +39,34 @@ class ViewRenderer
         $this->addHintpaths();
     }
 
-    public function getExtension($bladeViewPath)
+    public function getExtension(string $bladeViewPath): string
     {
         return strtolower(pathinfo($this->finder->find($bladeViewPath), PATHINFO_EXTENSION));
     }
 
-    public function render($path, $data)
+    public function render(string $path, PageData $pageData)
     {
-        return $this->viewFactory->file($path, $data->all())->render();
+        return $this->viewFactory->file($path, $pageData->all())->render();
     }
 
-    public function renderString($string)
+    public function renderString(string $string): string
     {
         return $this->bladeCompiler->compileString($string);
     }
 
-    private function addHintpaths()
+    private function addHintpaths(): void
     {
         collect($this->config->get('viewHintPaths'))->each(function ($path, $hint) {
             $this->addHintpath($hint, $path);
         });
     }
 
-    private function addHintPath($hint, $path)
+    private function addHintPath(string $hint, string $path): void
     {
         $this->viewFactory->addNamespace($hint, $path);
     }
 
-    private function addExtensions()
+    private function addExtensions(): void
     {
         collect($this->extensionEngines)->each(function ($engine, $extension) {
             $this->viewFactory->addExtension($extension, $engine);

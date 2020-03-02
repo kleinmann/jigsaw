@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 
 class SiteData extends IterableObject
 {
-    public static function build(Collection $config)
+    public static function build(Collection $config): self
     {
         $siteData = new static();
         $siteData->putIterable('collections', $config->get('collections'));
@@ -15,7 +15,7 @@ class SiteData extends IterableObject
         return $siteData;
     }
 
-    public function addCollectionData(array $collectionData)
+    public function addCollectionData(array $collectionData): self
     {
         collect($collectionData)->each(function ($collection, $collectionName) {
             return $this->put($collectionName, new PageVariable($collection));

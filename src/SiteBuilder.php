@@ -2,23 +2,39 @@
 
 namespace TightenCo\Jigsaw;
 
+use Illuminate\Support\Collection;
+use Symfony\Component\Finder\SplFileInfo;
 use TightenCo\Jigsaw\File\InputFile;
 use TightenCo\Jigsaw\File\Filesystem;
 use TightenCo\Jigsaw\Console\ConsoleOutput;
+use TightenCo\Jigsaw\File\OutputFile;
+use TightenCo\Jigsaw\Handlers\HandlerInterface;
+use TightenCo\Jigsaw\PathResolvers\OutputPathResolverInterface;
 
 class SiteBuilder
 {
+    /** @var string */
     private $cachePath;
+
+    /** @var Filesystem */
     private $files;
+
+    /** @var HandlerInterface[] */
     private $handlers;
+
+    /** @var OutputPathResolverInterface */
     private $outputPathResolver;
+
+    /** @var ConsoleOutput */
     private $consoleOutput;
-    private $useCache;
+
+    /** @var bool */
+    private $useCache = false;
 
     public function __construct(
         Filesystem $files,
-        $cachePath,
-        $outputPathResolver,
+        string $cachePath,
+        OutputPathResolverInterface $outputPathResolver,
         ConsoleOutput $consoleOutput,
         $handlers = []
     ) {
@@ -29,14 +45,17 @@ class SiteBuilder
         $this->handlers = $handlers;
     }
 
-    public function setUseCache($useCache)
+    public function setUseCache(bool $useCache): self
     {
         $this->useCache = $useCache;
 
         return $this;
     }
 
-    public function build($source, $destination, $siteData)
+    /**
+     * @return Collection|OutputFile[]
+     */
+    public function build(string $source, string $destination, SiteData $siteData): Collection
     {
         $this->prepareDirectory($this->cachePath, ! $this->useCache);
         $generatedFiles = $this->generateFiles($source, $siteData);
@@ -47,19 +66,19 @@ class SiteBuilder
         return $outputFiles;
     }
 
-    public function registerHandler($handler)
+    public function registerHandler(callable $handler): void
     {
         $this->handlers[] = $handler;
     }
 
-    private function prepareDirectories($directories)
+    private function prepareDirectories(array $directories): void
     {
         foreach ($directories as $directory) {
             $this->prepareDirectory($directory, true);
         }
     }
 
-    private function prepareDirectory($directory, $clean = false)
+    private function prepareDirectory(string $directory, bool $clean = false): void
     {
         if (! $this->files->isDirectory($directory)) {
             $this->files->makeDirectory($directory, 0755, true);
@@ -70,21 +89,24 @@ class SiteBuilder
         }
     }
 
-    private function cleanup()
+    private function cleanup(): void
     {
         if (! $this->useCache) {
             $this->files->deleteDirectory($this->cachePath);
         }
     }
 
-    private function generateFiles($source, $siteData)
+    /**
+     * @return Collection|OutputFile[]
+     */
+    private function generateFiles(string $source, SiteData $siteData): Collection
     {
         $files = collect($this->files->files($source));
         $this->consoleOutput->startProgressBar('build', $files->count());
 
-        $files = $files->map(function ($file) {
+        $files = $files->map(function (SplFileInfo $file) {
             return new InputFile($file);
-        })->flatMap(function ($file) use ($siteData) {
+        })->flatMap(function (InputFile $file) use ($siteData) {
             $this->consoleOutput->progressBar('build')->advance();
 
             return $this->handle($file, $siteData);
@@ -93,7 +115,12 @@ class SiteBuilder
         return $files;
     }
 
-    private function writeFiles($files, $destination)
+    /**
+     * @param Collection|OutputFile[] $files
+     *
+     * @return Collection|OutputFile[]
+     */
+    private function writeFiles(Collection $files, string $destination): Collection
     {
         $this->consoleOutput->writeWritingFiles();
 
@@ -102,7 +129,7 @@ class SiteBuilder
         });
     }
 
-    private function writeFile($file, $destination)
+    private function writeFile(OutputFile $file, string $destination)
     {
         $directory = $this->getOutputDirectory($file);
         $this->prepareDirectory("{$destination}/{$directory}");
@@ -111,21 +138,27 @@ class SiteBuilder
         return $this->getOutputLink($file);
     }
 
-    private function handle($file, $siteData)
+    /**
+     * @param InputFile $file
+     * @param SiteData $siteData
+     *
+     * @return Collection
+     */
+    private function handle(InputFile $file, SiteData $siteData): Collection
     {
         $meta = $this->getMetaData($file, $siteData->page->baseUrl);
 
         return $this->getHandler($file)->handle($file, PageData::withPageMetaData($siteData, $meta));
     }
 
-    private function getHandler($file)
+    private function getHandler(InputFile $file): HandlerInterface
     {
-        return collect($this->handlers)->first(function ($handler) use ($file) {
+        return collect($this->handlers)->first(function (HandlerInterface $handler) use ($file) {
             return $handler->shouldHandle($file);
         });
     }
 
-    private function getMetaData($file, $baseUrl)
+    private function getMetaData(InputFile $file, string $baseUrl): array
     {
         $filename = $file->getFilenameWithoutExtension();
         $extension = $file->getFullExtension();
@@ -137,7 +170,7 @@ class SiteBuilder
         return compact('filename', 'baseUrl', 'path', 'relativePath', 'extension', 'url', 'modifiedTime');
     }
 
-    private function getOutputDirectory($file)
+    private function getOutputDirectory(OutputFile $file): string
     {
         if ($permalink = $this->getFilePermalink($file)) {
             return urldecode(dirname($permalink));
@@ -146,7 +179,7 @@ class SiteBuilder
         return urldecode($this->outputPathResolver->directory($file->path(), $file->name(), $file->extension(), $file->page()));
     }
 
-    private function getOutputPath($file)
+    private function getOutputPath(OutputFile $file): string
     {
         if ($permalink = $this->getFilePermalink($file)) {
             return $permalink;
@@ -160,7 +193,7 @@ class SiteBuilder
         )));
     }
 
-    private function getOutputLink($file)
+    private function getOutputLink(OutputFile $file): string
     {
         if ($permalink = $this->getFilePermalink($file)) {
             return $permalink;
@@ -174,7 +207,7 @@ class SiteBuilder
         )));
     }
 
-    private function getFilePermalink($file)
+    private function getFilePermalink(OutputFile $file): ?string
     {
         return $file->data()->page->permalink ? '/' . resolvePath(urldecode($file->data()->page->permalink)) : null;
     }

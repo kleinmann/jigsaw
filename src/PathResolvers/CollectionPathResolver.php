@@ -3,20 +3,25 @@
 namespace TightenCo\Jigsaw\PathResolvers;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use TightenCo\Jigsaw\IterableObject;
+use TightenCo\Jigsaw\View\ViewRenderer;
 
 class CollectionPathResolver
 {
+    /** @var OutputPathResolverInterface */
     private $outputPathResolver;
+
+    /** @var ViewRenderer */
     private $view;
 
-    public function __construct($outputPathResolver, $viewRenderer)
+    public function __construct(OutputPathResolverInterface $outputPathResolver, ViewRenderer $viewRenderer)
     {
         $this->outputPathResolver = $outputPathResolver;
         $this->view = $viewRenderer;
     }
 
-    public function link($path, $data)
+    public function link(string $path, $data)
     {
         return collect($data->extends)->map(function ($bladeViewPath, $templateKey) use ($path, $data) {
             return $this->cleanOutputPath(
@@ -25,14 +30,18 @@ class CollectionPathResolver
         });
     }
 
-    public function getExtension($bladeViewPath)
+    public function getExtension(string $bladeViewPath)
     {
         $extension = $this->view->getExtension($bladeViewPath);
 
         return collect(['php', 'html'])->contains($extension) ? '' : '.' . $extension;
     }
 
-    private function getPath($path, $data, $extension, $templateKey = null)
+    /**
+     * @param callable|string $path
+     * @param $data
+     */
+    private function getPath($path, $data, string $extension, ?string $templateKey = null): ?string
     {
         $templateKeySuffix = $templateKey ? '/' . $templateKey : '';
 
@@ -41,7 +50,7 @@ class CollectionPathResolver
             $templateKeySuffix = '';
 
             if (! $path) {
-                return;
+                return null;
             }
         }
 
@@ -65,7 +74,7 @@ class CollectionPathResolver
         return $this->slug($data->getCollectionName()) . '/' . $this->slug($data->getFilename());
     }
 
-    private function parseShorthand($path, $data)
+    private function parseShorthand(string $path, $data)
     {
         preg_match_all('/\{(.*?)\}/', $path, $bracketedParameters);
 
@@ -83,9 +92,9 @@ class CollectionPathResolver
         return $bracketedParametersReplaced;
     }
 
-    private function getParameterValue($param, $data)
+    private function getParameterValue(string $param, $data): string
     {
-        list($param, $dateFormat) = explode('|', trim($param, '{}') . '|');
+        [$param, $dateFormat] = explode('|', trim($param, '{}') . '|');
         $slugSeparator = ctype_alpha($param[0]) ? null : $param[0];
 
         if ($slugSeparator) {
@@ -103,7 +112,13 @@ class CollectionPathResolver
         return $slugSeparator ? $this->slug($value, $slugSeparator) : $value;
     }
 
-    private function formatDate($date, $format)
+    /**
+     * @param int|string $date
+     * @param string $format
+     *
+     * @return false|string
+     */
+    private function formatDate($date, string $format): string
     {
         if (is_string($date)) {
             return strtotime($date) ? date($format, strtotime($date)) : '';
@@ -112,25 +127,25 @@ class CollectionPathResolver
         return date($format, $date);
     }
 
-    private function cleanInputPath($path)
+    private function cleanInputPath(string $path): string
     {
         return $this->ensureSlashAtBeginningOnly($path);
     }
 
-    private function cleanOutputPath($path)
+    private function cleanOutputPath(string $path): string
     {
         $removeDoubleSlashes = preg_replace('/\/\/+/', '/', $path);
-        $transliterate = $this->ascii($removeDoubleSlashes);
+        $transliterate = self::ascii($removeDoubleSlashes);
 
         return $this->ensureSlashAtBeginningOnly($transliterate);
     }
 
-    private function ensureSlashAtBeginningOnly($path)
+    private function ensureSlashAtBeginningOnly(string $path): string
     {
         return '/' . trimPath($path);
     }
 
-    private function resolve($path)
+    private function resolve(string $path): string
     {
         return $this->outputPathResolver->link(dirname($path), basename($path), 'html');
     }
@@ -139,7 +154,7 @@ class CollectionPathResolver
      * This is identical to Laravel's built-in `str_slug()` helper,
      * except it preserves `.` characters.
      */
-    private function slug($string, $separator = '-')
+    private function slug(string $string, string $separator = '-'): string
     {
         // Convert all dashes/underscores into separator
         $flip = $separator == '-' ? '_' : '-';
@@ -162,7 +177,7 @@ class CollectionPathResolver
      *
      * @return string
      */
-    private static function ascii($value, $language = 'en')
+    private static function ascii(string $value, string $language = 'en'): string
     {
         $languageSpecific = static::languageSpecificCharsArray($language);
 
@@ -186,7 +201,7 @@ class CollectionPathResolver
      *
      * @return array
      */
-    private static function charsArray()
+    private static function charsArray(): array
     {
         static $charsArray;
 
@@ -322,7 +337,7 @@ class CollectionPathResolver
      *
      * @return array|null
      */
-    private static function languageSpecificCharsArray($language)
+    private static function languageSpecificCharsArray(string $language): ?array
     {
         static $languageSpecific;
 

@@ -28,21 +28,21 @@ abstract class ScaffoldBuilder
 
     abstract public function build();
 
-    public function setBase($cwd = null)
+    public function setBase($cwd = null): self
     {
         $this->base = $cwd ?: getcwd();
 
         return $this;
     }
 
-    public function setConsole($console)
+    public function setConsole($console): self
     {
         $this->console = $console;
 
         return $this;
     }
 
-    public function archiveExistingSite()
+    public function archiveExistingSite(): void
     {
         $this->cacheComposerDotJson();
         $this->createEmptyArchive();
@@ -63,7 +63,7 @@ abstract class ScaffoldBuilder
         $this->restoreComposerDotJson();
     }
 
-    public function deleteExistingSite()
+    public function deleteExistingSite(): void
     {
         $this->cacheComposerDotJson();
 
@@ -81,14 +81,14 @@ abstract class ScaffoldBuilder
         $this->restoreComposerDotJson();
     }
 
-    public function cacheComposerDotJson()
+    public function cacheComposerDotJson(): self
     {
         $this->composerCache = $this->getComposer() ?? [];
 
         return $this;
     }
 
-    public function restoreComposerDotJson()
+    public function restoreComposerDotJson(): void
     {
         $composer = collect($this->composerCache)->only(['require', 'repositories']);
 
@@ -97,14 +97,14 @@ abstract class ScaffoldBuilder
         }
     }
 
-    protected function createEmptyArchive()
+    protected function createEmptyArchive(): void
     {
         $archived = $this->base . DIRECTORY_SEPARATOR . 'archived';
         $this->files->deleteDirectory($archived);
         $this->files->makeDirectory($archived, 0755, true);
     }
 
-    protected function deleteEmptyDirectories($directories)
+    protected function deleteEmptyDirectories($directories): void
     {
         collect($directories)->each(function ($directory) {
             if ($this->files->isEmptyDirectory($directory)) {
@@ -132,7 +132,7 @@ abstract class ScaffoldBuilder
         }
     }
 
-    protected function writeComposer($content = null)
+    protected function writeComposer($content = null): void
     {
         if ($content) {
             $this->files->put(

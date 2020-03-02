@@ -2,12 +2,16 @@
 
 namespace TightenCo\Jigsaw\Loaders;
 
+use Illuminate\Support\Collection;
 use TightenCo\Jigsaw\Collection\CollectionRemoteItem;
 use TightenCo\Jigsaw\File\Filesystem;
 
 class CollectionRemoteItemLoader
 {
+    /** @var Filesystem */
     private $files;
+
+    /** @var Collection */
     private $tempDirectories;
 
     public function __construct(Filesystem $files)
@@ -15,7 +19,7 @@ class CollectionRemoteItemLoader
         $this->files = $files;
     }
 
-    public function write($collections, $source)
+    public function write($collections, string $source): void
     {
         collect($collections)->each(function ($collection, $collectionName) use ($source) {
             $items = $this->getItems($collection);
@@ -26,7 +30,7 @@ class CollectionRemoteItemLoader
         });
     }
 
-    private function createTempDirectory($source, $collectionName)
+    private function createTempDirectory(string $source, string $collectionName): string
     {
         $tempDirectory = $source . '/_' . $collectionName . '/_tmp';
         $this->prepareDirectory($tempDirectory, true);
@@ -35,14 +39,14 @@ class CollectionRemoteItemLoader
         return $tempDirectory;
     }
 
-    public function cleanup()
+    public function cleanup(): void
     {
         collect($this->tempDirectories)->each(function ($path) {
             $this->files->deleteDirectory($path);
         });
     }
 
-    private function getItems($collection)
+    private function getItems(Collection $collection)
     {
         if (! $collection->items) {
             return;
@@ -53,7 +57,7 @@ class CollectionRemoteItemLoader
             $collection->items->toArray();
     }
 
-    private function prepareDirectory($directory, $clean = false)
+    private function prepareDirectory(string $directory, bool $clean = false): void
     {
         if (! $this->files->isDirectory($directory)) {
             $this->files->makeDirectory($directory, 0755, true);
@@ -64,14 +68,14 @@ class CollectionRemoteItemLoader
         }
     }
 
-    private function writeTempFiles($items, $directory, $collectionName)
+    private function writeTempFiles($items, string $directory, string $collectionName): void
     {
         collect($items)->each(function ($item, $index) use ($directory, $collectionName) {
             $this->writeFile(new CollectionRemoteItem($item, $index, $collectionName), $directory);
         });
     }
 
-    private function writeFile($remoteFile, $directory)
+    private function writeFile(CollectionRemoteItem $remoteFile, string $directory): void
     {
         $this->files->put($directory . '/' . $remoteFile->getFilename(), $remoteFile->getContent());
     }

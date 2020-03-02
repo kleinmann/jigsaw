@@ -6,26 +6,32 @@ use Exception;
 use Illuminate\Contracts\View\Engine as EngineInterface;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
 use Throwable;
+use TightenCo\Jigsaw\File\Filesystem;
+use TightenCo\Jigsaw\Parsers\FrontMatterParser;
 
 class MarkdownEngine implements EngineInterface
 {
+    /** @var FrontMatterParser */
     private $parser;
-    private $file;
-    private $sourcePath;
 
-    public function __construct($parser, $filesystem, $sourcePath)
+    /** @var Filesystem */
+    private $file;
+
+    public function __construct(FrontMatterParser $parser, Filesystem $filesystem)
     {
         $this->parser = $parser;
         $this->file = $filesystem;
-        $this->sourcePath = $sourcePath;
     }
 
-    public function get($path, array $data = [])
+    /**
+     * @param string $path
+     */
+    public function get($path, array $data = []): string
     {
         return $this->evaluateMarkdown($path);
     }
 
-    protected function evaluateMarkdown($path)
+    protected function evaluateMarkdown(string $path): string
     {
         try {
             $file = $this->file->get($path);

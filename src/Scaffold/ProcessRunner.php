@@ -7,7 +7,7 @@ use Symfony\Component\Process\Process;
 
 class ProcessRunner
 {
-    public function run($commands = [])
+    public function run($commands = []): self
     {
         collect($commands)->each(function ($command) {
             $this->runCommand($command);
@@ -20,7 +20,7 @@ class ProcessRunner
         return $this;
     }
 
-    protected function runCommand($command)
+    protected function runCommand($command): self
     {
         echo "\n> " . $command . "\n";
         $process = new Process($command);

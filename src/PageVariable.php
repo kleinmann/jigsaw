@@ -28,7 +28,7 @@ class PageVariable extends IterableObject
         }
     }
 
-    public function getPath($key = null)
+    public function getPath(?string $key = null): string
     {
         if (($key || $this->_meta->extending) && $this->_meta->path instanceof IterableObject) {
             return $this->_meta->path->get($key ?: $this->getExtending());
@@ -37,12 +37,12 @@ class PageVariable extends IterableObject
         return (string) $this->_meta->path;
     }
 
-    public function getPaths()
+    public function getPaths(): array
     {
         return $this->_meta->path;
     }
 
-    public function getUrl($key = null)
+    public function getUrl(string $key = null): string
     {
         if (($key || $this->_meta->extending) && $this->_meta->path instanceof IterableObject) {
             return $this->_meta->url->get($key ?: $this->getExtending());
@@ -51,12 +51,12 @@ class PageVariable extends IterableObject
         return (string) $this->_meta->url;
     }
 
-    public function getUrls()
+    public function getUrls(): array
     {
         return $this->_meta->url;
     }
 
-    protected function missingHelperError($functionName)
+    protected function missingHelperError($functionName): string
     {
         return 'No function named "' . $functionName . '" was found in the file "config.php".';
     }

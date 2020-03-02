@@ -9,7 +9,7 @@ class BasicScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    public function build()
+    public function build(): self
     {
         $this->scaffoldSite();
         $this->scaffoldMix();
@@ -17,12 +17,12 @@ class BasicScaffoldBuilder extends ScaffoldBuilder
         return $this;
     }
 
-    protected function scaffoldSite()
+    protected function scaffoldSite(): void
     {
         $this->files->copyDirectory(__DIR__ . '/../../stubs/site', $this->base);
     }
 
-    protected function scaffoldMix()
+    protected function scaffoldMix(): void
     {
         $this->files->copyDirectory(__DIR__ . '/../../stubs/mix', $this->base);
     }

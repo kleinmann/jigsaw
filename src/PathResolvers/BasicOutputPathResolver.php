@@ -2,9 +2,9 @@
 
 namespace TightenCo\Jigsaw\PathResolvers;
 
-class BasicOutputPathResolver
+class BasicOutputPathResolver implements OutputPathResolverInterface
 {
-    public function link($path, $name, $type, $page = 1)
+    public function link(string $path, string $name, string $type, int $page = 1): string
     {
         $extension = $type ? '.' . $type : '';
         $name = basename($name, $extension);
@@ -14,19 +14,19 @@ class BasicOutputPathResolver
             $this->clean('/' . $path . '/' . $name . $extension);
     }
 
-    public function path($path, $name, $type, $page = 1)
+    public function path(string $path, string $name, string $type, int $page = 1): string
     {
         return $this->link($path, $name, $type, $page);
     }
 
-    public function directory($path, $name, $type, $page = 1)
+    public function directory(string $path, string $name, string $type, int $page = 1): string
     {
         return $page > 1 ?
             $this->clean($path . '/' . $page) :
             $this->clean($path);
     }
 
-    private function clean($path)
+    private function clean(string $path): string
     {
         return str_replace('//', '/', $path);
     }

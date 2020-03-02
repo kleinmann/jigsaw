@@ -2,16 +2,29 @@
 
 namespace TightenCo\Jigsaw\File;
 
+use TightenCo\Jigsaw\PageData;
+
 class OutputFile
 {
+    /** @var string */
     private $path;
+
+    /** @var null|string */
     private $name;
+
+    /** @var string */
     private $extension;
+
+    /** @var string */
     private $contents;
+
+    /** @var PageData */
     private $data;
+
+    /** @var int */
     private $page;
 
-    public function __construct($path, $name, $extension, $contents, $data, $page = 1)
+    public function __construct(string $path, string $name, string $extension, ?string $contents, PageData $data, int $page = 1)
     {
         $this->path = $path;
         $this->name = $name;
@@ -21,37 +34,37 @@ class OutputFile
         $this->page = $page;
     }
 
-    public function path()
+    public function path(): string
     {
         return $this->path;
     }
 
-    public function name()
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function extension()
+    public function extension(): string
     {
         return $this->extension;
     }
 
-    public function contents()
+    public function contents(): ?string
     {
         return $this->contents;
     }
 
-    public function data()
+    public function data(): PageData
     {
         return $this->data;
     }
 
-    public function page()
+    public function page(): int
     {
         return $this->page;
     }
 
-    public function putContents($destination)
+    public function putContents(string $destination)
     {
         return file_put_contents($destination, $this->contents);
     }

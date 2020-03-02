@@ -22,7 +22,7 @@ class DefaultInstaller
     protected $ignore;
     protected $builder;
 
-    public function install(ScaffoldBuilder $builder, $settings = [])
+    public function install(ScaffoldBuilder $builder, array $settings = []): void
     {
         $this->builder = $builder;
         $this->delete = Arr::get($settings, 'delete', []);

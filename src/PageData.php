@@ -4,31 +4,31 @@ namespace TightenCo\Jigsaw;
 
 class PageData extends IterableObject
 {
-    public static function withPageMetaData(IterableObject $siteData, array $meta)
+    public static function withPageMetaData(IterableObject $siteData, array $meta): self
     {
-        $page_data = new static($siteData->except('page'));
-        $page_data->put('page', (new PageVariable($siteData->page))->put('_meta', new IterableObject($meta)));
+        $pageData = new static($siteData->except('page'));
+        $pageData->put('page', (new PageVariable($siteData->page))->put('_meta', new IterableObject($meta)));
 
-        return $page_data;
+        return $pageData;
     }
 
-    public function setPageVariableToCollectionItem($collectionName, $itemName)
+    public function setPageVariableToCollectionItem(string $collectionName, string $itemName): void
     {
         $this->put('page', $this->get($collectionName)->get($itemName));
     }
 
-    public function setExtending($templateToExtend)
+    public function setExtending(string $templateToExtend): void
     {
         $this->page->_meta->put('extending', $templateToExtend);
     }
 
-    public function setPagePath($path)
+    public function setPagePath(string $path): void
     {
         $this->page->_meta->put('path', $path);
         $this->updatePageUrl();
     }
 
-    public function updatePageUrl()
+    public function updatePageUrl(): void
     {
         $this->page->_meta->put('url', rightTrimPath($this->page->getBaseUrl()) . '/' . trimPath($this->page->getPath()));
     }

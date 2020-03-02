@@ -116,7 +116,7 @@ $container->bind(Factory::class, function ($c) use ($cachePath, $bladeCompiler) 
     });
 
     $resolver->register('markdown', function () use ($c) {
-        return new MarkdownEngine($c[FrontMatterParser::class], new Filesystem, $c['buildPath']['source']);
+        return new MarkdownEngine($c[FrontMatterParser::class], new Filesystem);
     });
 
     $resolver->register('blade-markdown', function () use ($c, $compilerEngine) {

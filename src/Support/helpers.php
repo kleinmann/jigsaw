@@ -10,22 +10,22 @@ use Symfony\Component\VarDumper\VarDumper;
  * Remove slashes (including backslashes on Windows),
  * spaces, and periods from the beginning and/or end of paths.
  */
-function leftTrimPath($path)
+function leftTrimPath(string $path): string
 {
     return ltrim($path, ' .\\/');
 }
 
-function rightTrimPath($path)
+function rightTrimPath(string $path): string
 {
     return rtrim($path, ' .\\/');
 }
 
-function trimPath($path)
+function trimPath(string $path): String
 {
     return rightTrimPath(leftTrimPath($path));
 }
 
-function resolvePath($path)
+function resolvePath(string $path): string
 {
     $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
     $segments = [];
@@ -44,7 +44,7 @@ function resolvePath($path)
 /**
  * Get the path to the public folder.
  */
-function public_path($path = '')
+function public_path(string $path = ''): string
 {
     $c = Container::getInstance();
     $source = Arr::get($c['config'], 'build.source', 'source');
@@ -55,7 +55,7 @@ function public_path($path = '')
 /**
  * Get the path to a versioned Elixir file.
  */
-function elixir($file, $buildDirectory = 'build')
+function elixir(string $file, string $buildDirectory = 'build'): string
 {
     static $manifest;
     static $manifestPath;
@@ -76,7 +76,7 @@ function elixir($file, $buildDirectory = 'build')
 /**
  * Get the path to a versioned Mix file.
  */
-function mix($path, $manifestDirectory = 'assets')
+function mix(string $path, string $manifestDirectory = 'assets'): string
 {
     static $manifests = [];
 

@@ -2,19 +2,28 @@
 
 namespace TightenCo\Jigsaw\Handlers;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use TightenCo\Jigsaw\Collection\CollectionPaginator;
+use TightenCo\Jigsaw\File\InputFile;
 use TightenCo\Jigsaw\File\OutputFile;
 use TightenCo\Jigsaw\File\TemporaryFilesystem;
 use TightenCo\Jigsaw\PageData;
 use TightenCo\Jigsaw\Parsers\FrontMatterParser;
 use TightenCo\Jigsaw\View\ViewRenderer;
 
-class PaginatedPageHandler
+class PaginatedPageHandler implements HandlerInterface
 {
+    /** @var CollectionPaginator */
     private $paginator;
+
+    /** @var FrontMatterParser */
     private $parser;
+
+    /** @var TemporaryFilesystem */
     private $temporaryFilesystem;
+
+    /** @var ViewRenderer */
     private $view;
 
     public function __construct(
@@ -29,7 +38,7 @@ class PaginatedPageHandler
         $this->view = $viewRenderer;
     }
 
-    public function shouldHandle($file)
+    public function shouldHandle(InputFile $file): bool
     {
         if (! Str::endsWith($file->getFilename(), '.blade.php')) {
             return false;
@@ -39,7 +48,7 @@ class PaginatedPageHandler
         return isset($content->frontMatter['pagination']);
     }
 
-    public function handle($file, PageData $pageData)
+    public function handle(InputFile $file, PageData $pageData): Collection
     {
         $pageData->page->addVariables($this->getPageVariables($file));
 

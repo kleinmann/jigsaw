@@ -2,10 +2,13 @@
 
 namespace TightenCo\Jigsaw\CollectionItemHandlers;
 
+use Closure;
+use TightenCo\Jigsaw\File\InputFile;
 use TightenCo\Jigsaw\Parsers\FrontMatterParser;
 
 class MarkdownCollectionItemHandler
 {
+    /** @var FrontMatterParser */
     private $parser;
 
     public function __construct(FrontMatterParser $parser)
@@ -13,17 +16,17 @@ class MarkdownCollectionItemHandler
         $this->parser = $parser;
     }
 
-    public function shouldHandle($file)
+    public function shouldHandle(InputFile $file)
     {
         return in_array($file->getExtension(), ['markdown', 'md', 'mdown']);
     }
 
-    public function getItemVariables($file)
+    public function getItemVariables(InputFile $file): array
     {
         return $this->parser->parse($file->getContents())->frontMatter;
     }
 
-    public function getItemContent($file)
+    public function getItemContent($file): Closure
     {
         return function () use ($file) {
             return $this->parser->parseMarkdown($file->getContents());

@@ -15,12 +15,12 @@ class JigsawMarkdownParser extends MarkdownExtra
         };
     }
 
-    public function text($text)
+    public function text(string $text): string
     {
         return $this->transform($text);
     }
 
-    public function parse($text)
+    public function parse(string $text): string
     {
         return $this->text($text);
     }
